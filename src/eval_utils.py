@@ -6,7 +6,7 @@ trained in the notebook.
 """
 
 import matplotlib.pyplot as plt
-import numpy as np
+import pandas as pd
 from sklearn.metrics import (
     average_precision_score,
     confusion_matrix,
@@ -43,10 +43,11 @@ def compute_metrics(y_true, y_pred, y_score=None, beta=0.5) -> dict:
 
 
 def plot_confusion_matrix(y_true, y_pred, title, ax=None):
+    """Draws a 2x2 confusion matrix (Normal/Fraud) on the given axes."""
     cm = confusion_matrix(y_true, y_pred)
     if ax is None:
         _, ax = plt.subplots(figsize=(4, 4))
-    im = ax.imshow(cm, cmap="Blues")
+    ax.imshow(cm, cmap="Blues")
     for i in range(2):
         for j in range(2):
             ax.text(j, i, cm[i, j], ha="center", va="center", color="black")
@@ -58,7 +59,6 @@ def plot_confusion_matrix(y_true, y_pred, title, ax=None):
     return ax
 
 
-def metrics_table(results: dict) -> "pd.DataFrame":
-    import pandas as pd
-
+def metrics_table(results: dict) -> pd.DataFrame:
+    """Turns a {model_name: metrics_dict} mapping into a comparison table."""
     return pd.DataFrame(results).T

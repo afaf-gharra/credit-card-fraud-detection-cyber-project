@@ -6,7 +6,6 @@ CSV from a public GitHub mirror so the project can be reproduced without a
 Kaggle account.
 """
 
-import hashlib
 from pathlib import Path
 from urllib.request import urlretrieve
 

@@ -4,13 +4,14 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.model_selection import train_test_split
 
 RANDOM_SEED = 42
 
 
 def load_dataset(csv_path: Path) -> pd.DataFrame:
-    df = pd.read_csv(csv_path)
-    return df
+    """Reads the raw transaction CSV into a DataFrame."""
+    return pd.read_csv(csv_path)
 
 
 def basic_inspection(df: pd.DataFrame) -> dict:
@@ -42,8 +43,7 @@ def add_time_features(df: pd.DataFrame) -> pd.DataFrame:
 
 def train_test_split_stratified(df: pd.DataFrame, feature_cols, target_col="Class",
                                  test_size=0.2, seed=RANDOM_SEED):
-    from sklearn.model_selection import train_test_split
-
+    """Stratified train/test split used by the supervised models (LR, RF)."""
     X = df[feature_cols]
     y = df[target_col]
     return train_test_split(X, y, test_size=test_size, stratify=y, random_state=seed)
@@ -55,8 +55,6 @@ def normal_only_train_test_split(df: pd.DataFrame, feature_cols, target_col="Cla
     normal (Class == 0) transactions so the autoencoder never sees fraud
     during training; the test set keeps the natural class mix.
     """
-    from sklearn.model_selection import train_test_split
-
     normal_df = df[df[target_col] == 0]
     fraud_df = df[df[target_col] == 1]
 
