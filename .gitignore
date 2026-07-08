@@ -1,4 +1,5 @@
 data/creditcard.csv
+outputs/
 .ipynb_checkpoints/
 __pycache__/
 *.pyc

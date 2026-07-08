@@ -4,7 +4,9 @@ from pathlib import Path
 
 import numpy as np
 import pandas as pd
+from sklearn.compose import ColumnTransformer
 from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 
 RANDOM_SEED = 42
 
@@ -67,3 +69,42 @@ def normal_only_train_test_split(df: pd.DataFrame, feature_cols, target_col="Cla
     X_test = test_df[feature_cols]
     y_test = test_df[target_col]
     return X_train, X_test, y_test
+
+
+def chronological_train_test_split(df: pd.DataFrame, feature_cols, target_col="Class",
+                                    time_col="Time", train_frac=0.8):
+    """Splits by transaction time rather than randomly: the first `train_frac`
+    of transactions (by `time_col`) become the training set, the remainder
+    the test set, with no shuffling and no stratification. This mimics real
+    deployment (train on the past, score the future) and is a stricter check
+    than a random split, since it cannot "leak" later transactions into
+    training and exposes any temporal drift in fraud patterns.
+    """
+    df_sorted = df.sort_values(time_col).reset_index(drop=True)
+    split_idx = int(len(df_sorted) * train_frac)
+
+    train_df = df_sorted.iloc[:split_idx]
+    test_df = df_sorted.iloc[split_idx:]
+
+    X_train = train_df[feature_cols]
+    y_train = train_df[target_col]
+    X_test = test_df[feature_cols]
+    y_test = test_df[target_col]
+    return X_train, X_test, y_train, y_test
+
+
+def build_amount_scaling_preprocessor() -> ColumnTransformer:
+    """Returns an unfitted ColumnTransformer that standardizes `Amount` and
+    passes every other feature column through unchanged.
+
+    Returning it unfitted (and building a fresh one per call) is deliberate:
+    it is meant to be placed inside an sklearn Pipeline (or rebuilt once per
+    cross-validation fold), so `StandardScaler` is only ever fit on whatever
+    training data it is handed -- never on the full dataset before a split,
+    which would leak test-set statistics into the scaling of training data.
+    """
+    preprocessor = ColumnTransformer(
+        transformers=[("scale_amount", StandardScaler(), ["Amount"])],
+        remainder="passthrough",
+    )
+    return preprocessor.set_output(transform="pandas")
